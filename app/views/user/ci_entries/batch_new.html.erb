@@ -1,0 +1,135 @@
+<h1>Nova CI (múltiplas entradas)</h1>
+
+<%= form_with url: user_ci_entries_batch_create_path, method: :post, id: "batch-ci-form" do %>
+  <div class="mb-3 d-flex gap-3 align-items-end">
+    <div class="flex-grow-1">
+      <label for="ci-date" class="form-label">Data</label>
+      <input type="date" id="ci-date" class="form-control">
+    </div>
+
+    <div class="flex-grow-1">
+      <label for="ci-content" class="form-label">Conteúdo</label>
+      <input type="text" id="ci-content" class="form-control" placeholder="Descreva o conteúdo da CI...">
+    </div>
+
+    <div>
+      <button type="button" id="add-ci-btn" class="btn btn-primary">➕ Adicionar</button>
+    </div>
+  </div>
+
+  <h5>CIs a serem salvas</h5>
+  <div id="ci-list" class="mb-3 border rounded p-3" style="min-height: 100px; background: #f8f9fa;">
+    <p id="empty-list-message" class="text-muted m-0">Nenhuma CI adicionada.</p>
+  </div>
+
+  <div id="hidden-fields-container" style="display: none;"></div>
+
+  <%= submit_tag "Salvar todas as CIs", class: "btn btn-success", id: "save-all-btn", disabled: true %>
+<% end %>
+
+<template id="ci-item-template">
+  <div class="ci-item d-flex justify-content-between align-items-center mb-2 p-2 bg-white border rounded">
+    <div>
+      <strong class="ci-date"></strong> — <span class="ci-content"></span>
+    </div>
+    <button type="button" class="btn btn-sm btn-danger ci-remove-btn">✖</button>
+  </div>
+</template>
+
+<template id="hidden-fields-template">
+  <div>
+    <input type="hidden" name="entries[][date]" class="hidden-date">
+    <input type="hidden" name="entries[][content]" class="hidden-content">
+  </div>
+</template>
+
+<script>
+function setupCiBatchForm() {
+  const form = document.getElementById("batch-ci-form");
+  if (form.dataset.listenerAttached) {
+    return;
+  }
+  form.dataset.listenerAttached = "true";
+
+  const addBtn = document.getElementById("add-ci-btn");
+  const ciList = document.getElementById("ci-list");
+  const emptyMsg = document.getElementById("empty-list-message");
+  const saveBtn = document.getElementById("save-all-btn");
+  const hiddenFieldsContainer = document.getElementById("hidden-fields-container");
+  const ciItemTemplate = document.getElementById("ci-item-template");
+  const hiddenFieldsTemplate = document.getElementById("hidden-fields-template");
+
+  let ciCount = 0;
+
+  function updateSaveButtonState() {
+    saveBtn.disabled = ciCount === 0;
+    emptyMsg.style.display = ciCount === 0 ? "block" : "none";
+  }
+
+  const addEntryHandler = function() {
+    const dateInput = document.getElementById("ci-date");
+    const contentInput = document.getElementById("ci-content");
+    const date = dateInput.value;
+    const content = contentInput.value.trim();
+
+    if (!date) {
+      alert("Por favor, selecione a data.");
+      return;
+    }
+    if (!content) {
+      alert("Por favor, preencha o conteúdo.");
+      return;
+    }
+
+    // Create the visible list item
+    const ciItemFragment = ciItemTemplate.content.cloneNode(true);
+    ciItemFragment.querySelector(".ci-date").textContent = date;
+    ciItemFragment.querySelector(".ci-content").textContent = content;
+    ciList.appendChild(ciItemFragment);
+
+    // Create the hidden fields
+    const hiddenFieldsFragment = hiddenFieldsTemplate.content.cloneNode(true);
+    hiddenFieldsFragment.querySelector(".hidden-date").value = date;
+    hiddenFieldsFragment.querySelector(".hidden-content").value = content;
+    hiddenFieldsContainer.appendChild(hiddenFieldsFragment);
+
+    ciCount++;
+    updateSaveButtonState();
+
+    // Clear input fields
+    dateInput.value = "";
+    contentInput.value = "";
+    dateInput.focus();
+  };
+
+  const removeEntryHandler = function(event) {
+    if (event.target.classList.contains("ci-remove-btn")) {
+      const ciItem = event.target.closest(".ci-item");
+      const index = Array.from(ciList.querySelectorAll('.ci-item')).indexOf(ciItem);
+
+      if (index >= 0) {
+          ciItem.remove();
+          hiddenFieldsContainer.children[index].remove();
+          ciCount--;
+          updateSaveButtonState();
+      }
+    }
+  };
+
+  const submitHandler = function(event) {
+    if (ciCount === 0) {
+      event.preventDefault();
+      alert("Você precisa adicionar pelo menos uma CI antes de salvar.");
+    }
+  };
+
+  addBtn.addEventListener("click", addEntryHandler);
+  ciList.addEventListener("click", removeEntryHandler);
+  form.addEventListener("submit", submitHandler);
+
+  // Initial state
+  updateSaveButtonState();
+}
+
+document.addEventListener("turbo:load", setupCiBatchForm);
+</script>

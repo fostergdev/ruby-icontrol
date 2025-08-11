@@ -1,0 +1,27 @@
+<h1>Editar CI para <%= @ci_month.month %>/<%= @ci_month.year %></h1>
+
+<%= form_with model: [ @ci_month, @ci_entry ], url: user_ci_month_ci_entry_path(@ci_month, @ci_entry) do |form| %>
+  <% if @ci_entry.errors.any? %>
+    <div style="color: red;">
+      <h2><%= pluralize(@ci_entry.errors.count, "error") %> prohibited this ci_entry from being saved:</h2>
+
+      <ul>
+        <% @ci_entry.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= form.label :date, class: "form-label" %>
+    <%= form.date_field :date, class: "form-control" %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :content, class: "form-label" %>
+    <%= form.text_area :content, rows: 5, class: "form-control" %>
+  </div>
+
+  <%= form.submit "Salvar", class: "btn btn-primary" %>
+<% end %>

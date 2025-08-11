@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  content: MyText
+  date: 2025-08-10
+  ci_month: one
+  user: one
+
+two:
+  content: MyText
+  date: 2025-08-10
+  ci_month: two
+  user: two
